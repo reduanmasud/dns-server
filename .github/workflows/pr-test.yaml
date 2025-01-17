@@ -66,6 +66,6 @@ jobs:
           DB_TEST_DATABASE: "app_test"
           DB_TEST_PASSWORD: ""
         run: |
-          php artisan key:generate
+          # php artisan key:generate
           php artisan migrate --force
           ./vendor/bin/pest
