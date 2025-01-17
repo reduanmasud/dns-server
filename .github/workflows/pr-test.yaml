@@ -5,29 +5,67 @@ on:
     branches:
       - main
 
+concurrency:
+  group: "deploy"
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Run Tests on PR
+  deploy:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0.21
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: app_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      # Checkout code
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up PHP
-      - name: Set up PHP
+      # Step 2: Setup PHP and Composer
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.3
           extensions: mbstring, exif, pcntl, bcmath, gd
-          ini-values: post_max_size=256M, upload_max_filesize=256M
+          tools: composer:v2
           coverage: none
 
-      # Install dependencies
-      - name: Install Composer dependencies
-        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+      # Step 3: Install Dependencies
+      - name: Install Dependencies
+        run: |
+          composer install -q --no-ansi --no-interaction --no-progress --prefer-dist --no-scripts
 
-      # Run Laravel Tests
-      - name: Run Tests
-        run: php artisan test
+      # Step 4: Set Directory Permissions
+      - name: Directory Permissions
+        run: chmod -R 777 storage bootstrap/cache
+
+      # Step 5: Verify DB exists
+      - name: Verify DB exists
+        run: mysql --host 127.0.0.1 --port 3306 -uroot -e "SHOW DATABASES LIKE 'app_test'"
+
+      # Step 6: Build Assets (npm run build)
+      - name: Build Assets
+        run: npm install --quiet && npm run build --quiet
+
+      # Step 7: Run Tests
+      - name: Generate Key & Run PHPUnit
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: "app_test"
+          DB_USERNAME: "root"
+          DB_PASSWORD: ""
+          DB_TEST_USERNAME: "root"
+          DB_TEST_DATABASE: "app_test"
+          DB_TEST_PASSWORD: ""
+        run: |
+          php artisan key:generate
+          php artisan migrate --force
+          ./vendor/bin/pest
