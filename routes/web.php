@@ -9,7 +9,7 @@ Route::get('/', function () {
 
 
 
-Route::get('/', [CaptivePortalController::class, 'showForm'])->name('portal.index');
-Route::post('/subscribe', [CaptivePortalController::class, 'handleSubscription'])->name('portal.subscribe');
-Route::get('/success', [CaptivePortalController::class, 'success'])->name('portal.success');
-Route::get('/payment', [CaptivePortalController::class, 'payment'])->name('portal.payment');
+// Route::get('/', [CaptivePortalController::class, 'showForm'])->name('portal.index');
+// Route::post('/subscribe', [CaptivePortalController::class, 'handleSubscription'])->name('portal.subscribe');
+// Route::get('/success', [CaptivePortalController::class, 'success'])->name('portal.success');
+// Route::get('/payment', [CaptivePortalController::class, 'payment'])->name('portal.payment');
