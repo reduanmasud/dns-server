@@ -1,0 +1,33 @@
+name: Pull Request Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run Tests on PR
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: mbstring, exif, pcntl, bcmath, gd
+          ini-values: post_max_size=256M, upload_max_filesize=256M
+          coverage: none
+
+      # Install dependencies
+      - name: Install Composer dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      # Run Laravel Tests
+      - name: Run Tests
+        run: php artisan test
