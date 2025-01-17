@@ -15,28 +15,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # # Step 2: Run Tests
-      # - name: Run Tests
-      #   run: |
-      #     composer install --no-dev
-      #     php artisan test
-
-      # Step 3: Install Deployer
+      # Step 2: Install Deployer
       - name: Install Deployer
         run: |
           curl -LO https://deployer.org/deployer.phar
           chmod +x deployer.phar
           mv deployer.phar /usr/local/bin/dep
 
-      # Step 4: Set up SSH and deploy
+      # Step 3: Set up SSH and deploy
       - name: Deploy Laravel App
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          # Set up SSH keys for deployment
+          # Create the .ssh directory if it doesn't exist
+          mkdir -p ~/.ssh
+          # Save the SSH key to the file
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          # Add the server to known hosts
+          # Add the server to known hosts to avoid SSH prompts
           ssh-keyscan -H 104.156.254.130 >> ~/.ssh/known_hosts
           # Deploy the app using Deployer
-          dep deploy
+          dep deploy -vvv
