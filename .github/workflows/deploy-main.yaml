@@ -1,38 +1,30 @@
-name: Deploy App
-
+name: Deploy
 on:
   push:
     branches:
       - main
-
+  pull_request:
+    branches:
+      - main
 jobs:
   deploy:
-    name: Deploy App
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # Step 2: Install Deployer
-      - name: Install Deployer
-        run: |
-          curl -LO https://deployer.org/deployer.phar
-          chmod +x deployer.phar
-          mv deployer.phar /usr/local/bin/dep
-
-      # Step 3: Set up SSH and deploy
-      - name: Deploy Laravel App
-        env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-        run: |
-          # Create the .ssh directory if it doesn't exist
-          mkdir -p ~/.ssh
-          # Save the SSH key to the file
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          # Add the server to known hosts to avoid SSH prompts
-          ssh-keyscan -H 104.156.254.130 >> ~/.ssh/known_hosts
-          # Deploy the app using Deployer
-          dep deploy -vvv
+      - uses: actions/checkout@v3
+      - name: Deploy To server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ~/app.reduanmasud.site
+            git fetch --all
+            git pull
+            composer install --no-interaction --no-dev --prefer-dist
+            npm install --quiet
+            npm run dev --quiet
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
