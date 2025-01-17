@@ -7,7 +7,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
+Route::get('/hello', function () {
+    return "hi!";
+});
 
 // Route::get('/', [CaptivePortalController::class, 'showForm'])->name('portal.index');
 // Route::post('/subscribe', [CaptivePortalController::class, 'handleSubscription'])->name('portal.subscribe');
